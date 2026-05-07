@@ -1,33 +1,44 @@
+import { Ionicons } from '@expo/vector-icons'; // Expo'nun kendi ikon kütüphanesi
 import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        headerShown: false, // Üstteki varsayılan başlığı gizler (tasarımı biz yapıyoruz)
+        tabBarStyle: { 
+          backgroundColor: '#0A0A0A', 
+          borderTopWidth: 1,
+          borderTopColor: '#222',
+          height: 60,
+          paddingBottom: 10,
+        },
+        tabBarActiveTintColor: '#39FF14', // Aktif sekme neon yeşil
+        tabBarInactiveTintColor: '#555',  // Pasif sekmeler sönük gri
+      }}
+    >
+      {/* 1. Sekme: Ana Sayfa (Reels) */}
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Akış',
+          tabBarIcon: ({ color }) => <Ionicons name="home" size={26} color={color} />,
         }}
       />
+      {/* 2. Sekme: Radar (Harita) */}
       <Tabs.Screen
-        name="explore"
+        name="map"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Radar',
+          tabBarIcon: ({ color }) => <Ionicons name="map" size={26} color={color} />,
+        }}
+      />
+      {/* 3. Sekme: Profil (Kadro) */}
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Kadro',
+          tabBarIcon: ({ color }) => <Ionicons name="person" size={26} color={color} />,
         }}
       />
     </Tabs>
