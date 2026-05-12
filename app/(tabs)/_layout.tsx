@@ -33,11 +33,19 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Ionicons name="map" size={26} color={color} />,
         }}
       />
-      {/* 3. Sekme: Profil (Kadro) */}
+      {/* 3. Sekme: Mesajlar (DM Kutusu) */}
+      <Tabs.Screen
+        name="messages"
+        options={{
+          title: 'Mesajlar',
+          tabBarIcon: ({ color }) => <Ionicons name="chatbubbles" size={26} color={color} />,
+        }}
+      />
+      {/* 3. Sekme: Profil (Profil) */}
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Kadro',
+          title: 'Profil ',
           tabBarIcon: ({ color }) => <Ionicons name="person" size={26} color={color} />,
         }}
       />

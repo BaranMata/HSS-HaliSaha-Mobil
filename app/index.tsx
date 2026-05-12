@@ -26,10 +26,9 @@ export default function IndexEkrani() {
     try {
       if (isLogin) {
         // GİRİŞ MANTIĞI
-        Alert.alert("Başarılı", "Kadrodasın! Sahaya giriş yapılıyor...");
-        if (isLogin) {
-  Alert.alert("Başarılı", "Kadrodasın! Sahaya giriş yapılıyor...");
-  router.push('/(tabs)/home'); // HARİTAYA GEÇİŞ KODU
+                if (isLogin) {
+  ;
+  router.push('/(tabs)/home'); 
 }
       } else {
         // KAYİT MANTIĞI
