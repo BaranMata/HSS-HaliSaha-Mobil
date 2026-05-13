@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { getUser } from './userSession';
 
 const BASE_URL = 'https://hss-halisaha.onrender.com';
 
@@ -26,10 +27,23 @@ export default function UploadVideoEkrani() {
   
   const [recording, setRecording] = useState(false);
   const [yukleniyor, setYukleniyor] = useState(false);
-  const [videoUri, setVideoUri] = useState<string | null>(null); // Çekilen videonun yolu
-  const [description, setDescription] = useState(""); // Kullanıcının yazacağı açıklama
+  const [videoUri, setVideoUri] = useState<string | null>(null);
+  const [description, setDescription] = useState("");
+  const [currentUsername, setCurrentUsername] = useState('@oyuncu');
+  const [currentUserId, setCurrentUserId] = useState('unknown');
   
   const cameraRef = useRef(null);
+
+  useEffect(() => {
+    const kullaniciBilgisiAl = async () => {
+      const user = await getUser();
+      if (user) {
+        setCurrentUsername(user.username);
+        setCurrentUserId(user.uid);
+      }
+    };
+    kullaniciBilgisiAl();
+  }, []);
 
   if (!cameraPermission || !micPermission) return <View />;
   if (!cameraPermission.granted || !micPermission.granted) {
@@ -48,7 +62,6 @@ export default function UploadVideoEkrani() {
     if (!videoUri) return;
     
     setYukleniyor(true);
-    console.log("Sunucuya yükleme başlatıldı...", videoUri);
 
     let formData = new FormData();
     formData.append('video', {
@@ -57,8 +70,8 @@ export default function UploadVideoEkrani() {
       type: 'video/mp4'
     } as any);
 
-    // BURASI DEĞİŞTİ: Artık state'den gelen açıklamayı gönderiyoruz
-    formData.append('username', '@baranasar');
+    formData.append('username', currentUsername);
+    formData.append('ownerId', currentUserId);
     formData.append('description', description || 'Sahalara dönüş! ⚽');
 
     try {

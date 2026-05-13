@@ -19,9 +19,10 @@ import {
 
 const { width, height } = Dimensions.get('window');
 const BASE_URL = 'https://hss-halisaha.onrender.com';
+import { getUser } from '../userSession';
 
 // --- 1. ALT BİLEŞEN: HER VİDEO KENDİ DURUMUNU YÖNETİR ---
-const VideoItem = ({ item, isPlaying, listHeight }) => {
+const VideoItem = ({ item, isPlaying, listHeight, currentUsername }) => {
   const [isManualPaused, setIsManualPaused] = useState(false);
 
   // Sosyal Etkileşim State'leri
@@ -81,13 +82,13 @@ const VideoItem = ({ item, isPlaying, listHeight }) => {
     setCommentCount(prev => prev + 1);
     
     // Eklediğimiz yorumu anında listeye koy (sunucuyu beklemeden)
-    setCommentList(prev => [...prev, { username: "@baranasar", text: commentText }]);
+    setCommentList(prev => [...prev, { username: currentUsername, text: commentText }]);
 
     try {
       await fetch(`${BASE_URL}/api/media/comment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoId: item.id, username: "@baranasar", text: commentText })
+        body: JSON.stringify({ videoId: item.id, username: currentUsername, text: commentText })
       });
     } catch (error) {
       console.error("Yorum gönderilemedi:", error);
@@ -196,9 +197,13 @@ export default function HomeEkrani() {
   
   // Tam ekran sorunu için dinamik yükseklik (varsayılan tahmini 85 çıkartıyoruz, sonra onLayout ile tam ölçecek)
   const [listHeight, setListHeight] = useState(height - 85);
+  const [currentUsername, setCurrentUsername] = useState('@oyuncu');
 
   useEffect(() => {
-    const videolariGetir = async () => {
+    const init = async () => {
+      const user = await getUser();
+      if (user) setCurrentUsername(user.username);
+
       try {
         const response = await fetch(`${BASE_URL}/api/media/feed`, {
           method: 'GET',
@@ -206,14 +211,13 @@ export default function HomeEkrani() {
         });
         const data = await response.json();
         setGercekVideolar(data.videos || []);
-        setYukleniyor(false);
       } catch (error) {
         console.error("Video çekme hatası:", error);
+      } finally {
         setYukleniyor(false);
       }
     };
-
-    videolariGetir();
+    init();
   }, []);
 
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
@@ -253,7 +257,8 @@ export default function HomeEkrani() {
             <VideoItem 
               item={item} 
               isPlaying={activeVideoIndex === index} 
-              listHeight={listHeight} 
+              listHeight={listHeight}
+              currentUsername={currentUsername}
             />
           )}
           keyExtractor={(item, index) => item.id ? item.id.toString() : index.toString()}
