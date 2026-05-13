@@ -8,15 +8,15 @@ const BASE_URL = 'https://hss-halisaha.onrender.com';
 export default function IndexEkrani() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [adSoyad, setAdSoyad] = useState('');
   const [username, setUsername] = useState('');
   const [position, setPosition] = useState('');
-  
+
   const [yukleniyor, setYukleniyor] = useState(false);
   const [isLogin, setIsLogin] = useState(true); // Giriş ekranından başlayalım
 
   const handleAuth = async () => {
-    // Giriş/Kayıt kontrol mantığı aynı kalıyor
-    if (!email || !password || (!isLogin && !username)) {
+    if (!email || !password || (!isLogin && (!username || !adSoyad))) {
       Alert.alert("Eksik Kadro", "Lütfen tüm alanları doldurun.");
       return;
     }
@@ -26,10 +26,7 @@ export default function IndexEkrani() {
     try {
       if (isLogin) {
         // GİRİŞ MANTIĞI
-                if (isLogin) {
-  ;
-  router.push('/(tabs)/home'); 
-}
+        router.push('/(tabs)/home');
       } else {
         // KAYİT MANTIĞI
         const simuleUid = "firebase_" + Math.floor(Math.random() * 100000); // Simülasyon
@@ -39,6 +36,7 @@ export default function IndexEkrani() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             uid: simuleUid,
+            fullName: adSoyad,
             username: username,
             position: position || "Belirtilmedi"
           }),
@@ -47,8 +45,8 @@ export default function IndexEkrani() {
         const data = await response.json();
 
         if (response.ok) {
-          Alert.alert("Hoş Geldin!", "Transfer başarıyla tamamlandı, " + username + "!");
-          setIsLogin(true); 
+          Alert.alert("Hoş Geldin!", "Transfer başarıyla tamamlandı, " + adSoyad + "!");
+          setIsLogin(true);
         } else {
           Alert.alert("Transfer Hatası", data.error);
         }
@@ -62,13 +60,13 @@ export default function IndexEkrani() {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
       {/* Telefonun üst barını siyah yapalım */}
       <StatusBar barStyle="light-content" backgroundColor="#000" />
-      
+
       <View style={styles.headerContainer}>
         {/* Neon Işıma Etkisi Verilen Başlık */}
         <Text style={styles.logo}>
@@ -86,8 +84,21 @@ export default function IndexEkrani() {
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.input}
-              placeholder="Takma Adın"
+              placeholder="Ad Soyad"
               placeholderTextColor="#555"
+              value={adSoyad}
+              onChangeText={setAdSoyad}
+            />
+          </View>
+        )}
+
+        {!isLogin && (
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              placeholder="Kullanıcı Adı"
+              placeholderTextColor="#555"
+              autoCapitalize="none"
               value={username}
               onChangeText={setUsername}
             />
@@ -130,9 +141,9 @@ export default function IndexEkrani() {
         </View>
 
         {/* Neon Buton */}
-        <TouchableOpacity 
-          style={styles.button} 
-          onPress={handleAuth} 
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleAuth}
           disabled={yukleniyor}
         >
           {yukleniyor ? (
@@ -144,7 +155,7 @@ export default function IndexEkrani() {
 
         <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.switchButton}>
           <Text style={styles.switchText}>
-            {isLogin ? "Henüz lisansın yok mu? Kaydol!" : "Zaten kadrodasın. Giriş yap."}
+            {isLogin ? "Henüz lisansın yok mu? Kaydol!" : "Zaten kadrodaysan giriş yap."}
           </Text>
         </TouchableOpacity>
       </View>

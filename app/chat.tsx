@@ -1,19 +1,52 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+const BASE_URL = 'https://hss-halisaha.onrender.com';
+
 export default function ChatEkrani() {
+  const params = useLocalSearchParams();
+  const chatRoomId = params.chatRoomId || 'demo_chat';
+  const chatTitle = params.title || 'Kaptan (FC Yenilmezler)';
+
   const [mesaj, setMesaj] = useState('');
   
-  // Test için simüle edilmiş mesaj geçmişi
+  // Test için simüle edilmiş mesaj geçmişi (API bağlantısı yoksa bunlar gösterilir)
   const [mesajlar, setMesajlar] = useState([
     { id: '1', text: 'Selam Baran, başvurunu gördüm. Defans hattında eksiğimiz var.', sender: 'kaptan', time: '20:45' },
     { id: '2', text: 'Selamlar! Tam benim mevkim, maç saat kaçtaydı?', sender: 'ben', time: '20:46' },
     { id: '3', text: '22:00 - 23:00 arası. Kramponlarını al gel, kadrodasın! 🟢', sender: 'kaptan', time: '20:47' },
   ]);
 
-  const mesajGonder = () => {
+  // Firestore'dan mesajları çek (gerçek zamanlı polling)
+  useEffect(() => {
+    const mesajlariGetir = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/messages/${chatRoomId}`);
+        const data = await response.json();
+        if (data.messages && data.messages.length > 0) {
+          const formattedMessages = data.messages.map((msg, index) => ({
+            id: msg.id || index.toString(),
+            text: msg.text,
+            sender: msg.senderId === 'user_baran_123' ? 'ben' : 'kaptan',
+            time: msg.createdAt ? new Date(msg.createdAt._seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
+          }));
+          setMesajlar(formattedMessages);
+        }
+      } catch (error) {
+        // API bağlantısı yoksa simüle veriler kalır
+        console.log("Mesajlar API'den çekilemedi, demo veriler kullanılıyor.");
+      }
+    };
+
+    mesajlariGetir();
+    // 3 saniyede bir yeni mesajları kontrol et (gerçek zamanlı etki)
+    const interval = setInterval(mesajlariGetir, 3000);
+    return () => clearInterval(interval);
+  }, [chatRoomId]);
+
+  const mesajGonder = async () => {
     if (mesaj.trim().length === 0) return;
 
     const yeniMesaj = {
@@ -23,11 +56,24 @@ export default function ChatEkrani() {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
+    // Optimistic UI: Mesajı anında ekranda göster
     setMesajlar([...mesajlar, yeniMesaj]);
     setMesaj('');
     
-    // İleride burada WebSocket ile Backend Software Flow'a anlık mesaj gönderme kodu olacak:
-    // socket.emit('sendMessage', yeniMesaj);
+    // Firestore'a kaydet
+    try {
+      await fetch(`${BASE_URL}/api/messages/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatRoomId: chatRoomId,
+          senderId: 'user_baran_123',
+          text: yeniMesaj.text
+        })
+      });
+    } catch (error) {
+      console.error("Mesaj sunucuya iletilemedi:", error);
+    }
   };
 
   const renderMesaj = ({ item }) => {
@@ -51,7 +97,7 @@ export default function ChatEkrani() {
           <Ionicons name="arrow-back" size={28} color="#39FF14" />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>Kaptan (FC Yenilmezler)</Text>
+          <Text style={styles.headerTitle}>{chatTitle}</Text>
           <Text style={styles.headerStatus}>Çevrimiçi</Text>
         </View>
       </View>
